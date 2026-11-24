@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Prototype KupangFresh — Simulasi Layanan</title>
+  <style>
+    * { box-sizing: border-box; font-family: system-ui, -apple-system, sans-serif; }
+    body { margin: 0; background: #f3f4f6; display: flex; justify-content: center; align-items: center; min-height: 100vh; padding: 20px; }
+    .phone { width: 100%; max-width: 400px; background: #ffffff; border-radius: 28px; box-shadow: 0 12px 35px rgba(0,0,0,0.12); overflow: hidden; border: 1px solid #e5e7eb; }
+    .topbar { background: linear-gradient(135deg, #15803d, #166534); color: #fff; padding: 18px 20px; }
+    .topbar h1 { margin: 0; font-size: 19px; letter-spacing: -0.3px; }
+    .topbar p { margin: 4px 0 0; font-size: 12px; opacity: 0.9; }
+    .content { padding: 18px; min-height: 460px; }
+    .card { border: 1px solid #e5e7eb; border-radius: 14px; padding: 14px; margin-bottom: 12px; background: #fafafa; transition: 0.2s; }
+    .card:hover { border-color: #16a34a; background: #f0fdf4; }
+    .card-title { font-weight: 700; font-size: 15px; margin: 0 0 4px; color: #111827; }
+    .meta { font-size: 12px; color: #4b5563; margin-bottom: 8px; line-height: 1.4; }
+    .price { font-weight: 700; color: #15803d; font-size: 14px; }
+    .row { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+    button { cursor: pointer; border: none; border-radius: 10px; padding: 11px 14px; font-weight: 600; font-size: 14px; transition: 0.15s; }
+    button:active { transform: scale(0.98); }
+    .btn-primary { background: #15803d; color: #fff; width: 100%; margin-top: 8px; }
+    .btn-primary:hover { background: #166534; }
+    .btn-secondary { background: #e5e7eb; color: #111827; }
+    .btn-secondary:hover { background: #d1d5db; }
+    .btn-sm { padding: 7px 12px; font-size: 12px; background: #16a34a; color: #fff; }
+    label { font-size: 13px; font-weight: 600; color: #374151; }
+    input, select, textarea { width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 10px; margin-top: 6px; margin-bottom: 14px; font-size: 14px; }
+    input:focus, select:focus, textarea:focus { outline: none; border-color: #16a34a; }
+    .badge { display: inline-block; background: #dcfce7; color: #166534; font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 999px; margin-bottom: 10px; }
+    .step-ind { font-size: 11px; font-weight: 600; color: #6b7280; margin-bottom: 10px; text-transform: uppercase; letter-spacing: 0.4px; }
+    .summary-box { background: #f0fdf4; border: 1px solid #bbf7d0; padding: 14px; border-radius: 12px; margin-bottom: 14px; font-size: 13px; line-height: 1.5; }
+  </style>
+</head>
+<body>
+  <div class="phone">
+    <div class="topbar">
+      <h1>KupangFresh</h1>
+      <p>Simulasi Pre-Order & Pengantaran UMKM Kupang</p>
+    </div>
+    <div class="content" id="app"></div>
+  </div>
+
+  <script>
+    const products = [
+      { id: 1, name: "Paket Sayur Segar Harian", umkm: "Tani Sejahtera Kupang", price: 25000, info: "Bayam, kangkung, tomat, cabai • Siap antar pagi" },
+      { id: 2, name: "Sambal & Lauk Rumahan", umkm: "Dapur Lokal Flobamora", price: 32000, info: "Porsi siap santap • Kemasan higienis" },
+      { id: 3, name: "Paket Buah Lokal Segar", umkm: "Kebun Oesao Mandiri", price: 28000, info: "Pisang, pepaya, jeruk lokal • Panen harian" }
+    ];
+
+    let state = {
+      step: 1,
+      selectedProduct: products[0],
+      qty: 1,
+      note: "",
+      slot: "Pagi (08.00 - 10.00 WITA)",
+      address: "",
+      payment: "QRIS",
+      orderId: ""
+    };
+
+    function formatRp(num) {
+      return "Rp" + num.toLocaleString("id-ID");
+    }
+
+    function render() {
+      const app = document.getElementById("app");
+      if (state.step === 1) {
+        app.innerHTML = `
+          <div class="step-ind">Langkah 1 dari 5 • Pilih Produk</div>
+          <span class="badge">Area Aktif: Kota Kupang</span>
+          ${products.map(p => `
+            <div class="card">
+              <div class="card-title">${p.name}</div>
+              <div class="meta">${p.umkm} • ${p.info}</div>
+              <div class="row">
+                <span class="price">${formatRp(p.price)}</span>
+                <button class="btn-sm" onclick="chooseProduct(${p.id})">Pilih & Atur</button>
+              </div>
+            </div>
+          `).join("")}
+        `;
+      } else if (state.step === 2) {
+        app.innerHTML = `
+          <div class="step-ind">Langkah 2 dari 5 • Detail & Catatan</div>
+          <div class="card">
+            <div class="card-title">${state.selectedProduct.name}</div>
+            <div class="meta">Mitra: ${state.selectedProduct.umkm}</div>
+            <div class="price">${formatRp(state.selectedProduct.price)} / paket</div>
+          </div>
+          <label>Jumlah Paket</label>
+          <input type="number" id="qtyInput" min="1" value="${state.qty}" />
+          <label>Catatan Tambahan (Opsional)</label>
+          <textarea id="noteInput" rows="2" placeholder="Contoh: Titip di warung depan gang">${state.note}</textarea>
+          <button class="btn-primary" onclick="goStep3()">Lanjut ke Keranjang</button>
+          <button class="btn-secondary btn-primary" onclick="setStep(1)">Kembali</button>
+        `;
+      } else if (state.step === 3) {
+        const subtotal = state.selectedProduct.price * state.qty;
+        app.innerHTML = `
+          <div class="step-ind">Langkah 3 dari 5 • Keranjang & Jadwal</div>
+          <div class="summary-box">
+            <div><strong>${state.selectedProduct.name}</strong> (x${state.qty})</div>
+            <div class="meta">Catatan: ${state.note || "-"}</div>
+            <div class="price">Subtotal: ${formatRp(subtotal)}</div>
+          </div>
+          <label>Jadwal Pengantaran</label>
+          <select id="slotInput">
+            <option ${state.slot.includes("Pagi") ? "selected" : ""}>Pagi (08.00 - 10.00 WITA)</option>
+            <option ${state.slot.includes("Sore") ? "selected" : ""}>Sore (16.00 - 18.00 WITA)</option>
+          </select>
+          <label>Alamat / Patokan di Kupang</label>
+          <input type="text" id="addrInput" value="${state.address}" placeholder="Contoh: Jl. Timor Raya, dekat minimarket" />
+          <button class="btn-primary" onclick="goStep4()">Lanjut ke Pembayaran</button>
+          <button class="btn-secondary btn-primary" onclick="setStep(2)">Kembali</button>
+        `;
+      } else if (state.step === 4) {
+        const subtotal = state.selectedProduct.price * state.qty;
+        const ongkir = 5000;
+        const total = subtotal + ongkir;
+        app.innerHTML = `
+          <div class="step-ind">Langkah 4 dari 5 • Pembayaran Simulasi</div>
+          <div class="summary-box">
+            <div>Produk: ${formatRp(subtotal)}</div>
+            <div>Ongkir area Kupang: ${formatRp(ongkir)}</div>
+            <div>Jadwal: ${state.slot}</div>
+            <div>Alamat: ${state.address || "Belum diisi (simulasi)"}</div>
+            <hr style="border:none;border-top:1px solid #bbf7d0;margin:8px 0;"/>
+            <div class="price">Total Bayar: ${formatRp(total)}</div>
+          </div>
+          <label>Metode Pembayaran</label>
+          <select id="payInput">
+            <option value="QRIS" ${state.payment === "QRIS" ? "selected" : ""}>QRIS (Scan / E-Wallet / Mobile Banking)</option>
+            <option value="Transfer Bank" ${state.payment === "Transfer Bank" ? "selected" : ""}>Transfer Bank (BI-FAST / VA)</option>
+          </select>
+          <button class="btn-primary" onclick="confirmOrder()">Konfirmasi & Bayar (Simulasi)</button>
+          <button class="btn-secondary btn-primary" onclick="setStep(3)">Kembali</button>
+        `;
+      } else if (state.step === 5) {
+        const total = state.selectedProduct.price * state.qty + 5000;
+        app.innerHTML = `
+          <div class="step-ind">Langkah 5 dari 5 • Selesai</div>
+          <span class="badge">Simulasi Berhasil</span>
+          <div class="summary-box">
+            <div class="card-title">Pesanan Terdaftar</div>
+            <div class="meta">ID: <strong>${state.orderId}</strong></div>
+            <div>Item: ${state.selectedProduct.name} (x${state.qty})</div>
+            <div>Metode: ${state.payment}</div>
+            <div>Total: <strong>${formatRp(total)}</strong></div>
+            <div class="meta" style="margin-top:8px;">Status: Menunggu konfirmasi mitra & jadwal antar ${state.slot}.</div>
+          </div>
+          <button class="btn-primary" onclick="resetSim()">Ulangi Simulasi dari Awal</button>
+        `;
+      }
+    }
+
+    function setStep(s) { state.step = s; render(); }
+    function chooseProduct(id) {
+      state.selectedProduct = products.find(p => p.id === id);
+      state.step = 2;
+      render();
+    }
+    function goStep3() {
+      state.qty = Math.max(1, parseInt(document.getElementById("qtyInput").value || "1", 10));
+      state.note = document.getElementById("noteInput").value.trim();
+      state.step = 3;
+      render();
+    }
+    function goStep4() {
+      state.slot = document.getElementById("slotInput").value;
+      state.address = document.getElementById("addrInput").value.trim();
+      state.step = 4;
+      render();
+    }
+    function confirmOrder() {
+      state.payment = document.getElementById("payInput").value;
+      state.orderId = "KF-" + Math.floor(100000 + Math.random() * 900000);
+      state.step = 5;
+      render();
+    }
+    function resetSim() {
+      state = { step: 1, selectedProduct: products[0], qty: 1, note: "", slot: "Pagi (08.00 - 10.00 WITA)", address: "", payment: "QRIS", orderId: "" };
+      render();
+    }
+
+    render();
+  </script>
+</body>
+</html>
